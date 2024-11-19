@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"
+    ></script>
+
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule
+      src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"
+    ></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>real time update</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Inter", serif;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: aliceblue;
+        background-color: #343434;
+        /*background-color: #343434;*/
+      }
+      button {
+        --glow-color: rgba(217, 176, 255, 01);
+        --glow-spread-color: rgba(191, 123, 255, 0.781);
+        --enhanced-glow-color: rgb(231, 206, 255);
+        --btn-color: rgba(100, 61, 136);
+        height: 40px;
+        width: 40px;
+        display: grid;
+        place-items: center;
+        border: none;
+        color: var(--glow-color);
+        font-size: 24px;
+        font-weight: bolder;
+        background-color: var(--btn-color);
+        border-radius: 50%;
+        outline: none;
+        position: relative;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      button.active {
+        color: var(--btn-color);
+        background-color: var(--glow-color);
+        box-shadow: 0 0 1em 0.25em var(--glow-color),
+          0 0 4em 1.5em var(--glow-spread-color),
+          inset 0 0 0.75em 0.25em var(--glow-color);
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 70%;
+        height: 90%;
+      }
+      .ceil {
+        background-color: #333;
+        color: #ddd;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        place-items: center;
+        height: 90%;
+        width: 90%;
+        border-radius: 1rem;
+        text-transform: uppercase;
+        position: relative;
+        box-shadow: 0 0 30px #222;
+      }
+      .des {
+        position: absolute;
+        bottom: 18%;
+      }
+      div.disabled::after {
+        height: 100%;
+        width: 100%;
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        color: #444;
+        z-index: 1;
+        backdrop-filter: blur(2px);
+        border-radius: inherit;
+        cursor: not-allowed;
+      }
+      @media (max-width: 641px) {
+        .container {
+          width: 90%;
+        }
+      }
+      @media (max-width: 489px) {
+        .container {
+          width: 90%;
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="ceil">
+        <h3 class="type">swith 1</h3>
+        <button class="btn1">
+          <ion-icon name="bulb-outline"></ion-icon>
+        </button>
+        <div class="des">salon light</div>
+      </div>
+
+      <div class="ceil">
+        <h3 class="type">swith 2</h3>
+        <button class="btn2"><ion-icon name="bulb-outline"></ion-icon></button>
+        <div class="des">bedroom light</div>
+      </div>
+
+      <div class="ceil disabled">
+        <h3 class="type">swith 3</h3>
+        <button class="btn3"><ion-icon name="bulb-outline"></ion-icon></button>
+        <div class="des">kitchin light</div>
+      </div>
+
+      <div class="ceil disabled">
+        <h3 class="type">swith 4</h3>
+        <button class="btn4"><ion-icon name="bulb-outline"></ion-icon></button>
+        <div class="des">verenda light</div>
+      </div>
+    </div>
+
+    <script>
+      const btn1 = document.querySelector(".btn1");
+      const btn2 = document.querySelector(".btn2");
+
+      let led1;
+      let led2;
+
+      const checkBtn1 = () => {
+        if (led1) {
+          btn1.classList.add("active");
+        } else {
+          btn1.classList.remove("active");
+        }
+        // upload();
+      };
+
+      const checkBtn2 = () => {
+        if (led2) {
+          btn2.classList.add("active");
+        } else {
+          btn2.classList.remove("active");
+        }
+        // upload();
+      };
+
+      // Content-Type": "application/json
+      const upload = async () => {
+        const url = await fetch("upload.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `led1=${led1}&led2=${led2}`,
+        });
+        // const res = await url.text();
+        const res = await url.json();
+        console.log(res);
+      };
+
+      const stat = async () => {
+        const url = await fetch("upload.php", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const res = await url.json();
+        // console.log(res);
+        led1 = +res.led1;
+        led2 = +res.led2;
+
+        console.log(led1, led2);
+
+        checkBtn1();
+        checkBtn2();
+      };
+
+      // setInterval(stat, 5000);
+
+      window.addEventListener("load", stat);
+
+      btn1.addEventListener("click", () => {
+        led1 = led1 === 1 ? 0 : 1;
+        checkBtn1();
+        upload();
+      });
+
+      btn2.addEventListener("click", () => {
+        led2 = led2 === 1 ? 0 : 1;
+        checkBtn2();
+        upload();
+      });
+      console.log("kira");
+    </script>
+    <noscript>please enable your javascript</noscript>
+  </body>
+</html>

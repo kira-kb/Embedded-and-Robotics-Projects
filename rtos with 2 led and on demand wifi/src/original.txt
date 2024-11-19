@@ -1,0 +1,142 @@
+#include <Arduino.h>
+#include <WiFiManager.h>
+#include <HTTPClient.h>
+#include <AceButton.h>
+
+WiFiManager wifiManager;
+
+boolean notConnected = true;
+
+const int portalTrigerPin = 13;
+const int wifiSignalLED = 2;
+const int portalSignalLED = 23;
+
+char incoming;
+
+int LED1 = 21;
+int LED2 = 22;
+// int LED3 = 23;
+
+int BTN1 = 5;
+int BTN2 = 18;
+
+void handleWifiConnection (void * parameter){
+  Serial.println("\n handling wifi connection \n");
+
+  wifiManager.setConfigPortalTimeout(1);
+  if (!wifiManager.autoConnect("AutoConnectAP", "123456789")) {
+    Serial.println("remmembering states");
+    delay(300);
+  }
+      
+  for(;;){
+    if (WiFi.status() == WL_CONNECTED){
+      notConnected = false;
+      Serial.println("wifi still connected");
+
+      digitalWrite(wifiSignalLED, HIGH);
+    }else {
+      notConnected = true;
+      Serial.println("wifi not connected!!");
+        // WiFi.reconnect();
+      digitalWrite(wifiSignalLED, LOW);
+
+      // wifiManager.setConfigPortalTimeout(1);
+      // if (!wifiManager.autoConnect("AutoConnectAP", "123456789")) {
+      //   Serial.println("remmembering states");
+      //   delay(300);
+      // }
+
+      
+      WiFi.begin(wifiManager.getWiFiSSID().c_str(), wifiManager.getWiFiPass().c_str());
+    }
+
+    if(!digitalRead(portalTrigerPin)){
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
+      if(!digitalRead(portalTrigerPin)){
+        digitalWrite(portalSignalLED, HIGH);
+
+          wifiManager.setConfigPortalTimeout(120);
+        if (!wifiManager.startConfigPortal("AutoConnectAP", "123456789")) {
+            Serial.println("failed to connect and hit timeout");
+          }
+          digitalWrite(portalSignalLED, LOW);
+        }
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void handleBluetoothComand(void * parameters){
+  for(;;){
+      if(Serial2.available() > 0){
+        incoming = Serial2.read();
+        Serial2.write(incoming);
+
+        if(incoming == '1') digitalWrite(LED1, !digitalRead(LED1));
+        if(incoming == '2') digitalWrite(LED2, !digitalRead(LED2));
+    }
+    // vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial2.begin(9600);
+  Serial2.println("seial2 started");
+
+// signals #fff
+  pinMode(wifiSignalLED, OUTPUT);
+  pinMode(portalSignalLED, OUTPUT);
+  pinMode(portalTrigerPin, INPUT_PULLUP);
+
+  // buttons #fff
+
+  pinMode(BTN1, INPUT_PULLUP);
+  pinMode(BTN2, INPUT_PULLUP);
+  // pinMode(BTN3, INPUT_PULLUP);
+
+// outputs #fff
+
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  // pinMode(LED3, OUTPUT);
+
+  xTaskCreate(
+    handleWifiConnection,
+    "handleWifiConnection",
+    2048,
+    NULL,
+    1,
+    NULL
+  );
+
+  xTaskCreate(
+    handleBluetoothComand,
+    "handleBluetoothComand",
+    1024,
+    NULL,
+    1,
+    NULL
+  );
+}
+
+void loop(){
+// Serial.println("void loop started");
+  if(!digitalRead(BTN1)) {
+    delay(200);
+    if(!digitalRead(BTN1)) {
+      digitalWrite(LED1, !digitalRead(LED1));
+      Serial2.write("led1: ", digitalRead(LED1));
+      }
+  }
+
+  if(!digitalRead(BTN2)) {
+    delay(200);
+    if(!digitalRead(BTN2)) {
+      digitalWrite(LED2, !digitalRead(LED2));
+      Serial2.write("led2: ", digitalRead(LED2));
+      }
+  }
+  // delay(200);
+}
